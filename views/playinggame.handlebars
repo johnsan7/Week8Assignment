@@ -1,1 +1,23 @@
-<p>Other page represent</p>
+<!doctype html>
+<html>
+<head>
+	<title>Guess the Weather Game!</title>
+</head>
+<body>
+	<h3>Hello, {{name}}. You have ${{total}} left. </h3>
+	Please guess a number of degrees Fahrenheit. One of the random cities below will be chosen. If you are within 5 degrees you win $3. <br>
+	If you are not within 5 degrees, you lose 1 dollar. 
+	<br>
+	{{body}}
+	<form action='/' method='post'>
+		Name:
+		<br>
+		<input type="text" name="name">
+		<input type="submit" value="New Game">
+		<br>
+	</form>
+</body>
+
+	
+
+</html>

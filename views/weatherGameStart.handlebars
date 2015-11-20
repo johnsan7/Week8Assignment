@@ -9,14 +9,15 @@
 	<h3>You will guess the temperature in a random city, if you are within 5 degrees fahrenheit you will win.</h3>
 	<br>
 	{{body}}
-	<form>
+	<form action='/' method='post'>
 		Name:
 		<br>
-		<input type="text" name="fname">
+		<input type="text" name="name">
 		<input type="submit" value="New Game">
 		<br>
 	</form>
 		
+		<br> name is {{name}}
 </body>
 
 	

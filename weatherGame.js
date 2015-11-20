@@ -24,9 +24,9 @@ app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', 3000);
 
+//This will control the game. If session is null it sends to the game start page, that page does a post. 
 
-
-app.get('/game', function(req,res){
+app.get('/', function(req,res,next){
 
 	var outObj = {};
 	if(!req.session.name)
@@ -35,15 +35,42 @@ app.get('/game', function(req,res){
 		res.render('weatherGameStart',outObj);
 		return;
 	}
-	else
+	
+	console.log("getting past page");
+	if(outObj.total > 0)
 	{
-		console.log("getting to else");
-		res.render('playinggame',outObj);
-		
+		console.log("getting to bet");
+		res.render('playinggame',outObj);	
 	}
 	
 });
 
+
+app.post('/', function(req,res,next)
+{
+	var outObj = {};
+	console.log("getting to post");
+	if(req.body['name'])
+	{
+		req.session.name = req.body.name;
+		req.session.total = 15;
+		console.log("session infosaved");
+
+	}
+	//else(!req.session.name)
+	//{
+	//	console.log('Problem, back to start');
+	//	res.render('weatherGameStart',outObj);
+	//	//return;
+	//}
+	
+	outObj.name = req.session.name;
+	outObj.total = req.session.total;
+	
+	res.render('playinggame',outObj);
+	
+	
+});
 app.use(function(req,res)
 {
 	res.status(404);
