@@ -8,14 +8,17 @@
 	Please guess a number of degrees Fahrenheit. One of the random cities below will be chosen. If you are within 5 degrees you win $3. <br>
 	If you are not within 5 degrees, you lose 1 dollar. 
 	<br>
-	{{body}}
-	<form action='/' method='post'>
-		Name:
+	<br>
+	{{{body}}}
+	<form action='/' method='get'>
+		Degrees in Fahrenheit guess:
 		<br>
-		<input type="text" name="name">
-		<input type="submit" value="New Game">
+		<input type="text" name="guess">
+		<input type="submit" value="player guess">
 		<br>
 	</form>
+	
+	
 </body>
 
 	
