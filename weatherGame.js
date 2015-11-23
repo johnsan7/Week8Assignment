@@ -1,4 +1,7 @@
 
+//This code, var express through app.set('port',3000) is code from lectures and the class. The implementation that I have is the exact same as the lectures
+//This program is a game where there are 100 random zip codes from US locations. You have to guess the temperature within 5 degrees without knowing the name
+//of the city. You get 3 points for a correct answer and lose 1 point for an incorrect. 
 
 var express = require('express');
 
@@ -29,51 +32,88 @@ app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', 3000);
 
-//This will control the game. If session is null it sends to the game start page, that page does a post. 
+//This is the basic code of the game. 
 
 app.get('/', function(req,res,next){
 
 	var outObj = {};
 
-	if(!req.session.name)
-	{
-		console.log('getting to robottown');
-		res.render('weatherGameStart',outObj);
-		return;
-	}
+//This gets the name, total, and guess from the request/session and saves it to render it later in webpages
 	outObj.name = req.session.name;
 	outObj.total = req.session.total;
 	outObj.guess = req.query.guess;
 	
-	console.log("name, total and guess are ", outObj.name, outObj.total, outObj.guess);
-	//req.session.firstRun = true;
+	//console.log("name, total and guess are ", outObj.name, outObj.total, outObj.guess);
+
 	
-	console.log("getting past page");
-	//if(req.session.count)
-	//{
-	//	console.log("getting to bet");
-	//	req.session.firstRun = false;
-	//	res.render('playinggame',outObj);	
-	//}
+	//console.log("getting past page");
+//If the session is new (does not have a name) call the game start page to get a name. Code is similar to lecture code
+	if(!req.session.name)
+	{
+		//console.log('getting to robottown');
+		res.render('weatherGameStart', outObj);
+		return;
+	}
+
+//If the user has used their last dollar, render the game over page. This will allow them to restart if they like 
+	if(req.session.total < 2)
+	{
+		//console.log("getting to if session total less than 1");
+		res.render('gameOver', outObj);
+		return;
+	}
 	
-	console.log("getting to else statement");
+	//console.log("getting to else statement");
+
+//This calls randomZip function below, that will get a random zip from list of 100 zip codes.
 	var randoZip = randomZip();	//This else is what runs the game really We will start off with generating request to get city, and putting our city info into outObj.
 									//then seeing temp at rando city If temp is within 5, then we increment total in the session also out object, increment count and render. 
+//Makes request to openweather API. Uses random zip code to get information for a random city. 
 	request(baseUrl + randoZip + apiKey, function(err,response,body)
 	{
 		if(!err && (response.statusCode > 199 && response.statusCode < 400))
 		{
 			var response = JSON.parse(body);
-			console.log("seems like requests are coming through, status code .", response.name);
+			//console.log("seems like requests are coming through, status code .", response.name);
+			var fahrTemp = Math.round((((response.main.temp-273.15)*1.8)+32));				//This converts the Kelvin response from the server to Fahrenheit rounded to nearest whole number
+			//This calculates whether guess was within 5 
+			var winMargin = Math.abs(req.query.guess - fahrTemp);			
+			//console.log("Converted temp is ", fahrTemp);
+			//console.log("raw Kelvin is ", response.main.temp);
+			
+			outObj.cityName = response.name;
+			outObj.zipCode = randoZip;
+			outObj.temp = fahrTemp;
+			//console.log("Gets to important if");
+			//console.log("winMargin is ", winMargin);
+			
+//If player wins, we add 3 to scre, save the winner message, then render it all in the playinggame view. The else is for if they lose, basically the inverse
+			if(winMargin < 5)
+			{
+				var outcomeText = "You were within 5 degrees! You guessed: ";
+				
+				req.session.total = req.session.total + 3;
+				outObj.total = req.session.total;
+				outObj.outcomeText = outcomeText;
+				res.render('playinggame', outObj);
+			}
+			else
+			{
+				var outcomeText = "You were not within 5 degrees, you lose 1 dollar! You guessed: ";
+				req.session.total = req.session.total - 1;
+				outObj.total = req.session.total;
+				outObj.outcomeText = outcomeText;
+				res.render('playinggame', outObj);
+			}
+			
 
-			//var main = JSON.parse(body.main);
-			//console.log(main.temp);
+				
 			
 			
 		}
 		else
 		{
-				console.log("getting to else in call to weather api");
+				console.log("getting to else in call to weather api, error occured with request");
 				console.log(response.statusCode);
 		}
 			
@@ -82,25 +122,20 @@ app.get('/', function(req,res,next){
 
 });
 
-
+//When player starts a new game, gets submitted as post. This assembles the information correctly, then renders playinggame with the information
 app.post('/', function(req,res,next)
 {
 	var outObj = {};
-	console.log("getting to post");
+	//console.log("getting to post");
 	if(req.body['name'])
 	{
 		req.session.name = req.body.name;
 		req.session.total = 15;
 		//req.session.count = 1;
-		console.log("session infosaved");
+		//console.log("session infosaved");
 
 	}
-	//else(!req.session.name)
-	//{
-	//	console.log('Problem, back to start');
-	//	res.render('weatherGameStart',outObj);
-	//	//return;
-	//}
+
 	
 	outObj.name = req.session.name;
 	outObj.total = req.session.total;
@@ -109,6 +144,17 @@ app.post('/', function(req,res,next)
 	
 	
 });
+
+//If from the game over screen a new game is chosen, session is destroyed and we render the starting page where you enter your name again. 
+app.post('/newGame', function(req,res)
+ {
+	console.log("Session destroyed");
+	req.session.destroy();
+	res.render('weatherGameStart');
+
+	
+});
+//These next two are right from the lectures
 app.use(function(req,res)
 {
 	res.status(404);
@@ -117,7 +163,6 @@ app.use(function(req,res)
 });
 
 app.use(function(err,req,res,next){
-	//console.error(err.stack);
 	res.type('plain/text');
 	res.status(500);
 	res.render('500');	
@@ -129,6 +174,7 @@ app.listen(app.get('port'), function(){
 	
 });
 
+//This puts 100 zip codes into a array, then it chooses 1 at random and returns it. 
 function randomZip()
 {
 	var zipArr = 	['55016',  '22601', '02920', '19380', '33414', '17331', '04240',  '01801', '11729',  '32703',
@@ -144,7 +190,22 @@ function randomZip()
 	
 	
 	
-	//console.log(zipArr.length);
 	return zipArr[Math.floor(Math.random() * 100)];
 	
 };
+
+/*
+app.get('/postTest', function(req,res)
+{
+	res.render(postTest);
+	
+});
+
+app.post('/postTest', function(req,res)
+{
+	var randoZip = req.body.zip;
+	
+	
+	
+});
+*/

@@ -18,6 +18,12 @@
 		<br>
 	</form>
 	
+	{{#if outcomeText}}
+	<p>{{outcomeText}} {{guess}} City Temperature was actually {{temp}} </p>
+	<p> City name was {{cityName}} from randomly chosen zip code {{zipCode}} </p>
+	<p> Please choose another temperature! <p>
+	
+	{{/if}}
 	
 </body>
 
